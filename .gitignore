@@ -1,0 +1,16 @@
+# IntelliJ
+.idea/
+*.iml
+
+# Build-Ausgaben
+target/
+out/
+build/
+
+# Logs & OS
+*.log
+.DS_Store
+
+# Maven/Gradle
+.mvn/wrapper/maven-wrapper.jar
+.gradle/

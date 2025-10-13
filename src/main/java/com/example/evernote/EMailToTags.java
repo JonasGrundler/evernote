@@ -1,0 +1,85 @@
+package com.example.evernote;
+
+import java.util.*;
+
+public class EMailToTags {
+
+    private Map<String, List<String>> map = new HashMap<>();
+    private Set<String> tags = new HashSet<>();
+    private Map<String, String> tagToGuid = new HashMap<>();
+    private Map<String, String> guidToTag = new HashMap<>();
+
+    public EMailToTags () {
+        addInfo("@merz-schule.de", "Merz-Schule");
+        addInfo("felbel.hausverwaltung@gmail.com", "HV Felbel Hausverwaltung");
+        addInfo("@email.etg24.de", "etg24");
+        addInfo("@paypal.de", "PayPal");
+        addInfo("@cloudHQ.net", "cloudHQ");
+        addInfo("@advanzia.com", "Advanzia Bank");
+        addInfo("@mini-charging.com", "BMW", "Jun");
+        addInfo("@apcoaflow.com", "APCOA FLOW");
+        addInfo("@waldschule-degerloch.de", "Waldschule Degerloch");
+        addInfo("@mailing.milesandmore.com", "Miles & More", "Lufthansa");
+        addInfo("maccount@microsoft.com", "verdimo");
+        addInfo("nicht.antworten@kundenservice.vodafone.com", "Vodafone");
+        // hint: verdimo gleich in Verdimo Posteingang verschieben
+    }
+
+    private void addInfo (String eMail, String... tags) {
+        add(eMail, tags);
+    }
+
+    private void add (String eMail, String[] eTags) {
+        List<String> l = new ArrayList<>();
+        map.put(eMail, l);
+        for (String tag : eTags) {
+            l.add(tag);
+            tags.add(tag);
+        }
+    }
+
+    public List<String> getTags (String text) {
+        List<String> tags = new ArrayList<>();
+        for (String key : map.keySet()) {
+            if (text.endsWith(key)) {
+                tags.addAll(map.get(key));
+            }
+        }
+        return tags;
+    }
+
+    public String getGUID(String tag) {
+        return tagToGuid.get(tag);
+    }
+
+    public String getTag(String guid) {
+        return guidToTag.get(guid);
+    }
+
+    public void setGUID(String tag, String guid) {
+        System.out.println(tag + "::" + guid);
+        tagToGuid.put(tag, guid);
+        guidToTag.put(guid, tag);
+    }
+
+    public Set<String> getAllTags() {
+        return tags;
+    }
+
+    public Set<String> getEMails() {
+        return map.keySet();
+    }
+
+    public void removeTag(String tag) {
+        tags.remove(tag);
+        for (List<String> l : map.values()) {
+            l.remove(tag);
+        }
+        tags.remove(tag);
+        String guid = tagToGuid.remove(tag);
+        if (guid != null) {
+            guidToTag.remove(guid);
+        }
+    }
+
+}
