@@ -31,7 +31,7 @@ public class ImageToText {
     }
 
     private ImageToText() throws Exception {
-        ProcessBuilder pb = new ProcessBuilder("python", System.getenv("PADDLE_DIR") + "\\image_to_text.py");
+        ProcessBuilder pb = new ProcessBuilder(System.getenv("PYTHON") + "\\python", System.getenv("PADDLE_DIR") + "\\image_to_text.py");
         pb.redirectErrorStream(true);
 
         Process process = pb.start();

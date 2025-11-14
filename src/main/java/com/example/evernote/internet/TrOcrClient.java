@@ -43,7 +43,7 @@ public class TrOcrClient {
                 .version(HttpClient.Version.HTTP_1_1)
                 .build();
 
-        ProcessBuilder pbUvicorn = new ProcessBuilder("python", "-m uvicorn server:app --host 127.0.0.1 --port 8000");
+        ProcessBuilder pbUvicorn = new ProcessBuilder(System.getenv("PYTHON") + "\\python", "-m uvicorn server:app --host 127.0.0.1 --port 8000");
         pbUvicorn.redirectErrorStream(true);
 
         System.out.println("starting uvicorn server ...");
