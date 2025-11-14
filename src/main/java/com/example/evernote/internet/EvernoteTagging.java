@@ -208,6 +208,9 @@ public class EvernoteTagging {
 
     private boolean setTitleForPaperDocuments(String source, String title, String year, NoteMetadata nm, Note note) {
         boolean noteUpdated = false;
+        System.out.println("attributes:" + nm.getAttributes());
+        System.out.println(source + ":source:" + (nm.getAttributes() == null ? "null" : nm.getAttributes().getSource()));
+        System.out.println(title + ":title:" + nm.getTitle());
         if (
                 nm.getAttributes() != null &&
                 source.equals(nm.getAttributes().getSource()) &&
