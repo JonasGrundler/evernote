@@ -36,7 +36,7 @@ public class RemoteNoteStore {
     private RemoteNoteStore() throws TException, EDAMSystemException, EDAMUserException {
         EvernoteAuth userAuth = new EvernoteAuth(com.evernote.auth.EvernoteService.PRODUCTION, LocalTokenStore.getSingleton().load());
         ClientFactory factory = new ClientFactory(userAuth);
-        NoteStoreClient noteStore = factory.createNoteStoreClient();
+        noteStore = factory.createNoteStoreClient();
         tags = noteStore.listTags();
     }
 
