@@ -1,24 +1,66 @@
-package com.example.evernote;
+package com.example.evernote.internet;
 
+import com.example.evernote.ImageToText;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.http.*;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Locale;
+
 
 public class TrOcrClient {
+
+    private final String baseUrl = "http://127.0.0.1:8000";
     private final HttpClient http;
     private final ObjectMapper om = new ObjectMapper();
     private final URI base;
 
-    public TrOcrClient(String baseUrl) {
+    private static final TrOcrClient singleton;
+
+    static {
+        TrOcrClient ls = null;
+        try {
+            ls = new TrOcrClient();
+        } catch (Exception e) {
+            e.printStackTrace(System.out);
+        }
+        singleton = ls;
+    }
+
+    public static TrOcrClient getSingleton() {
+        return singleton;
+    }
+
+    private TrOcrClient() throws IOException {
         this.base = URI.create(baseUrl.endsWith("/") ? baseUrl : baseUrl + "/");
         this.http = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .version(HttpClient.Version.HTTP_1_1)
                 .build();
+
+        ProcessBuilder pbUvicorn = new ProcessBuilder("python", "-m uvicorn server:app --host 127.0.0.1 --port 8000");
+        pbUvicorn.redirectErrorStream(true);
+
+        System.out.println("starting uvicorn server ...");
+        Process process = pbUvicorn.start();
+
+        BufferedReader pyOut = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+
+        try {
+            Thread.sleep(30000);
+        } catch (Exception e) {
+        }
+
+        char[] c = new char[4096];
+        int count = pyOut.read(c);
+
+        System.out.println(String.valueOf(c, 0, count));
+        System.out.println("uvicorn server ready");
     }
 
     private JsonNode postBytes(String path, byte[] imageBytes) throws Exception {

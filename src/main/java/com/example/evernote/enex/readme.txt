@@ -1,0 +1,3 @@
+- Folder(s) aus Evernote exportieren (.enex), Dateien kommen ins Export-Verzeichnis von enex
+- EnexFilesProcessor starten (main)
+- EnDocsToCSVs starten (main)

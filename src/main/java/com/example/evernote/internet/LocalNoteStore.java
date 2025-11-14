@@ -1,28 +1,39 @@
-package com.example.evernote;
+package com.example.evernote.internet;
 
 import com.evernote.edam.type.Note;
+import com.example.evernote.LocalStore;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 
 public class LocalNoteStore {
 
-    public LocalNoteStore() {
-        String userHome = System.getProperty("user.home");
+    private static final LocalNoteStore singleton;
+
+    static {
+        LocalNoteStore ls = null;
+        try {
+            ls = new LocalNoteStore();
+        } catch (Exception e) {
+            e.printStackTrace(System.out);
+        }
+        singleton = ls;
     }
+
+    public static LocalNoteStore getSingleton() {
+        return singleton;
+    }
+
+    private LocalNoteStore() {
+    }
+
     private Path getNotePath(String guid, int updateSequenceNum) {
-        String userHome = System.getProperty("user.home");
-        Path p = Paths.get(userHome, ".note-store", "note_" + guid + "_" + updateSequenceNum + ".obj");
+        Path p = Paths.get(LocalStore.getSingleton().getInternet_single_notes().toString(), "note_" + guid + "_" + updateSequenceNum + ".obj");
         return p;
     }
     public void save(Note note) throws IOException {
-        System.out.println("note " + note.getGuid() + "_" + note.getUpdateSequenceNum() + " saved in local store.");
         Path notePath = getNotePath(note.getGuid(), note.getUpdateSequenceNum());
         Files.createDirectories(notePath.getParent());
         ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(notePath.toFile())));
@@ -31,6 +42,7 @@ public class LocalNoteStore {
     }
     public Note load(String guid, int updateSequenceNum) {
         Path notePath = getNotePath(guid, updateSequenceNum);
+        System.out.println("note from store:" + notePath.toString());
         try {
             if (Files.exists(notePath)) {
                 ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(notePath.toFile())));
@@ -40,14 +52,10 @@ public class LocalNoteStore {
             } else {
                 System.out.println("note " + guid + "_" + updateSequenceNum + " not found in local store.");
             }
-        } catch (Exception ignored) {ignored.printStackTrace();}
+        } catch (Exception e) {
+            e.printStackTrace(System.out);
+        }
         return null;
-    }
-
-    public void writeJpg (BufferedImage img, int rn, String guid, int updateSequenceNum) throws Exception {
-        String userHome = System.getProperty("user.home");
-        Path path = Paths.get(userHome, ".note-store", "note_" + guid + "_" + updateSequenceNum + "_" + rn + "_" + "img.jpg");
-        ImageIO.write(img,"jpg",path.toFile());
     }
 
 }

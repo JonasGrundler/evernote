@@ -1,4 +1,4 @@
-package com.example.evernote;
+package com.example.evernote.auth;
 import com.github.scribejava.core.builder.api.DefaultApi10a;
 public class EvernoteApi extends DefaultApi10a {
     private static final String BASE = "https://www.evernote.com"; // Production

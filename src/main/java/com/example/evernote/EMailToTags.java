@@ -1,5 +1,11 @@
 package com.example.evernote;
 
+import com.evernote.edam.error.EDAMSystemException;
+import com.evernote.edam.error.EDAMUserException;
+import com.evernote.edam.type.Tag;
+import com.evernote.thrift.TException;
+import com.example.evernote.internet.RemoteNoteStore;
+
 import java.util.*;
 
 public class EMailToTags {
@@ -9,7 +15,23 @@ public class EMailToTags {
     private Map<String, String> tagToGuid = new HashMap<>();
     private Map<String, String> guidToTag = new HashMap<>();
 
-    public EMailToTags () {
+    private static final EMailToTags singleton;
+
+    static {
+        EMailToTags ls = null;
+        try {
+            ls = new EMailToTags();
+        } catch (Exception e) {
+            e.printStackTrace(System.out);
+        }
+        singleton = ls;
+    }
+
+    public static EMailToTags getSingleton() {
+        return singleton;
+    }
+
+    private EMailToTags () throws TException, EDAMSystemException, EDAMUserException {
         addInfo("@merz-schule.de", "Merz-Schule");
         addInfo("felbel.hausverwaltung@gmail.com", "HV Felbel Hausverwaltung");
         addInfo("@email.etg24.de", "etg24");
@@ -23,6 +45,29 @@ public class EMailToTags {
         addInfo("maccount@microsoft.com", "verdimo");
         addInfo("nicht.antworten@kundenservice.vodafone.com", "Vodafone");
         // hint: verdimo gleich in Verdimo Posteingang verschieben
+
+        init();
+    }
+
+    private void init() throws TException, EDAMSystemException, EDAMUserException {
+        // prepare tags for emails
+        List<Tag> tags = RemoteNoteStore.getSingleton().getTags();
+        // validate...
+        System.out.println("mapping");
+        for (String eTag : EMailToTags.getSingleton().getAllTags()) {
+            boolean found = false;
+            for (Tag tag : tags) {
+                if (tag.getName().equals(eTag)) {
+                    found = true;
+                    EMailToTags.getSingleton().setGUID(tag.getName(), tag.getGuid());
+                    continue;
+                }
+            }
+            if (! found) {
+                System.out.println("eTag " + eTag + " not found!");
+            }
+        }
+
     }
 
     private void addInfo (String eMail, String... tags) {
@@ -56,8 +101,7 @@ public class EMailToTags {
         return guidToTag.get(guid);
     }
 
-    public void setGUID(String tag, String guid) {
-        System.out.println(tag + "::" + guid);
+    private void setGUID(String tag, String guid) {
         tagToGuid.put(tag, guid);
         guidToTag.put(guid, tag);
     }
