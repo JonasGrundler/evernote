@@ -13,7 +13,7 @@ public class InferenceClient {
 
         this.suffix = suffix;
 
-        ProcessBuilder pbInf = new ProcessBuilder("python", "C:\\Users\\Jonas\\IdeaProjects\\PaddleOCR\\inference_tags.py", "--suffix", suffix);
+        ProcessBuilder pbInf = new ProcessBuilder("python", System.getenv("PADDLE_DIR") + "\\inference_tags.py", "--suffix", suffix);
         pbInf.redirectErrorStream(true);
 
         try {

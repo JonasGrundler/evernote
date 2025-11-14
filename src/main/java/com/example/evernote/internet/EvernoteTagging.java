@@ -23,17 +23,17 @@ import java.util.*;
 
 public class EvernoteTagging {
 
-    private InferenceClient inferenceClientAll = new InferenceClient("v7_c40");
-    private InferenceClient inferenceClient4 = new InferenceClient("v8_c40_2020");
-    private InferenceClient inferenceClient1 = new InferenceClient("v8_c40_2024");
+    private InferenceClient inferenceClientAll;
+    private InferenceClient inferenceClient4;
+    private InferenceClient inferenceClient1;
 
-    private InternetHelper internetHelper = null;
-    {
-        try {
-            internetHelper = new InternetHelper();
-        } catch (Exception e) {
-            e.printStackTrace(System.out);
-        }
+    private InternetHelper internetHelper;
+
+    private EvernoteTagging() throws Exception {
+        internetHelper = new InternetHelper();
+        inferenceClientAll = new InferenceClient("v7_c40");
+        inferenceClient4 = new InferenceClient("v8_c40_2020");
+        inferenceClient1 = new InferenceClient("v8_c40_2024");
     }
 
     public static void main(String[] args) {
