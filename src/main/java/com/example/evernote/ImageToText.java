@@ -42,6 +42,7 @@ public class ImageToText {
         // ocr ready
         String line = null;
         while ((line = pyOut.readLine()) == null || ! line.trim().equals("ocr ready")) {
+            if (line != null && line.trim().length() > 0)
             System.out.println("line:" + line);
         }
         System.out.println("line:" + line);
