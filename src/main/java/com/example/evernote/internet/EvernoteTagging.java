@@ -213,7 +213,7 @@ public class EvernoteTagging {
         System.out.println(title + ":title:" + nm.getTitle());
         if (
                 nm.getAttributes() != null &&
-                source.equals(nm.getAttributes().getSource()) &&
+                (nm.getAttributes().getSource() == null || source.equals(nm.getAttributes().getSource())) &&
                 (nm.getTitle() == null || nm.getTitle().equals(title) || nm.getTitle().equals(""))) {
             System.out.println("----------------- reco -------------------");
             try {
