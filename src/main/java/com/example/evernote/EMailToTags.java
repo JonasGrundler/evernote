@@ -54,12 +54,12 @@ public class EMailToTags {
         List<Tag> tags = RemoteNoteStore.getSingleton().getTags();
         // validate...
         System.out.println("mapping");
-        for (String eTag : EMailToTags.getSingleton().getAllTags()) {
+        for (String eTag : getAllTags()) {
             boolean found = false;
             for (Tag tag : tags) {
                 if (tag.getName().equals(eTag)) {
                     found = true;
-                    EMailToTags.getSingleton().setGUID(tag.getName(), tag.getGuid());
+                    setGUID(tag.getName(), tag.getGuid());
                     continue;
                 }
             }
