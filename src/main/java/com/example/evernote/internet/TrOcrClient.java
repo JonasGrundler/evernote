@@ -44,7 +44,7 @@ public class TrOcrClient {
                 .version(HttpClient.Version.HTTP_1_1)
                 .build();
 
-        ProcessBuilder pbUvicorn = new ProcessBuilder(System.getenv("UVICORN") + "\\.python\\Scripts\\python", "-m uvicorn server:app --host 127.0.0.1 --port 8000");
+        ProcessBuilder pbUvicorn = new ProcessBuilder(System.getenv("UVICORN") + "\\.python\\Scripts\\python", "-m", "uvicorn", "server:app", "--host", "127.0.0.1", "--port", "8000");
         pbUvicorn.directory(new File(System.getenv("UVICORN") + "\\trocr-service"));
 
         pbUvicorn.redirectErrorStream(true);
