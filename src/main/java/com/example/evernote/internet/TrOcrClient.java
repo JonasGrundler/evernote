@@ -83,6 +83,7 @@ public class TrOcrClient {
 
     /** Freitext aus oberem Bildbereich (Server-Endpoint /ocr). */
     public String ocr(byte[] imageBytes) throws Exception {
+        System.out.println("got:" + (imageBytes == null ? "0 bytes" : imageBytes.length + " bytes"));
         String boundary = "----JavaBoundary" + System.currentTimeMillis();
         var body = new java.io.ByteArrayOutputStream();
         var CRLF = "\r\n";
