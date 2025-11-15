@@ -28,6 +28,7 @@ public class TrOcrClient {
         singleton = ls;
     }
 
+    /*
     public static void main(String[] args) {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -38,6 +39,8 @@ public class TrOcrClient {
             e.printStackTrace(System.out);
         }
     }
+
+     */
 
     public static TrOcrClient getSingleton() {
         return singleton;

@@ -10,13 +10,13 @@ import com.evernote.edam.type.Note;
 import com.evernote.edam.type.Resource;
 import com.evernote.edam.type.Tag;
 import com.example.evernote.BuildCSV;
-import com.example.evernote.EMailToTags;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -31,6 +31,9 @@ public class EvernoteTagging {
 
     private boolean reTag = false;
 
+    private static final int INTERVAL = 60 * 60 * 1000; // 12x/Tag
+    private static final int COUNT = 50; // 300/Tag bei 12 Durchläufen, pro Note werden 2 API Calls gemacht
+
     private EvernoteTagging(boolean reTag) throws Exception {
         this.reTag = reTag;
         internetHelper = new InternetHelper();
@@ -43,7 +46,17 @@ public class EvernoteTagging {
         try {
             boolean reTag = args != null && args.length == 1 && args[0].equals("retag=true");
             EvernoteTagging et = new EvernoteTagging(reTag);
-            et.tagNotes();
+
+            // 1x pro Stunde
+            while (true) {
+                long t = System.currentTimeMillis();
+                try {
+                    et.tagNotes();
+                } catch (Exception e) {
+                    e.printStackTrace(System.out);
+                }
+                Thread.sleep(60 * 60 * 1000 - (System.currentTimeMillis() - t));
+            }
         } catch (Exception e) {
             e.printStackTrace(System.out);
         }
@@ -62,11 +75,11 @@ public class EvernoteTagging {
         return false;
     }
 
-    public String tagNotes() throws Exception {
+    public void tagNotes() throws Exception {
         try {
-            String source = "mobile.iphone";
-            String title = "Foto";
-            String year = "0";
+            // reload in case...
+            RemoteTagStore.getSingleton().init();
+            EMailToTags.getSingleton().init();
 
             NoteFilter f = new NoteFilter();
             // Name immer in Anführungszeichen, ggf. " escapen:
@@ -82,26 +95,28 @@ public class EvernoteTagging {
             NotesMetadataList meta = RemoteNoteStore.getSingleton().getNoteStore().findNotesMetadata(f, 0, 100, spec);
             // → liefert nur Notizen aus genau diesem Notizbuch (per Name gefiltert)
 
-            StringBuilder sb = new StringBuilder("Letzte 100 Notizen:\n\n");
             List<NoteMetadata> l = meta.getNotes();
+
+            int count = 0;
             for (NoteMetadata nm : l) {
                 try {
-                    if (reTag || ! LocalNoteStore.getSingleton().isTagged(nm.getGuid())) {
+                    if (count < COUNT && (reTag || ! LocalNoteStore.getSingleton().isTagged(nm.getGuid()))) {
+                        System.out.println("<<<<<<<<<<<<<<<<< count " + count + " >>>>>>>>>>>>>>>>>>>");
                         LocalNoteStore.getSingleton().unTag(nm.getGuid());
-                        System.out.println("attributes:" + nm.getAttributes().getAuthor() + " " + nm.getAttributes().toString());
-                        sb.append(nm.getTitle());
+                        //System.out.println("attributes:" + nm.getAttributes().getAuthor() + " " + nm.getAttributes().toString());
 
                         Note note = LocalNoteStore.getSingleton().load(nm.getGuid(), nm.getUpdateSequenceNum());
                         if (note == null) {
                             note = RemoteNoteStore.getSingleton().getNoteStore().getNote(nm.getGuid(), true, true, true, true);
                             LocalNoteStore.getSingleton().save(note);
                             System.out.println("note from internet:" + note.getTitle());
+                            count++;
                         } else {
                             System.out.println("note from store:" + note.getTitle());
                         }
 
                         // title for paper documents
-                        boolean titleUpdated = setTitleForPaperDocuments(source, title, year, nm, note);
+                        boolean titleUpdated = setTitleForPaperDocuments(nm, note);
 
                         // E-Mails
                         boolean tagsFromEMailsUpdated = setTagsFromEMails(nm, note);
@@ -112,21 +127,21 @@ public class EvernoteTagging {
                         if (tagsFromPredictionsUpdated || titleUpdated || tagsFromEMailsUpdated) {
                             System.out.println("update:" + note.getTitle());
                             RemoteNoteStore.getSingleton().getNoteStore().updateNote(note);
+                            count++;
                         }
                         LocalNoteStore.getSingleton().tag(nm.getGuid());
                     }
                 } catch (Exception e) {e.printStackTrace(System.out);}
-                sb.append("\n");
+                //sb.append("\n");
                 //meta.getNotes().forEach(n -> sb.append(n.getTitle()).append(" | GUID=").append(n.getGuid()).append('\n'));
             }
-            return sb.toString();
         } catch (Exception e) {
             e.printStackTrace(System.out);
             if (e instanceof EDAMUserException) {
                 EDAMUserException eue = (EDAMUserException) e;
                 if (eue.getErrorCode() == EDAMErrorCode.AUTH_EXPIRED) {
                     LocalTokenStore.getSingleton().clear();
-                    return "Auth expired. Token wurde gelöscht. Bitte neu autorisieren: /evernote/oauth/start";
+                    System.out.println("Auth expired. Token wurde gelöscht. Bitte neu autorisieren: /evernote/oauth/start");
                 }
             }
             throw e;
@@ -165,7 +180,7 @@ public class EvernoteTagging {
                 t = t.trim();
                 if (isNumber(t)) continue;
                 if (t.equals("done")) continue;
-                for (Tag tag : RemoteNoteStore.getSingleton().getTags()) {
+                for (Tag tag : RemoteTagStore.getSingleton().getTags()) {
                     if (tag.getName().equals(t)) {
                         selectedPredictedTagsGuids.add(tag.getGuid());
                         break;
@@ -214,11 +229,17 @@ public class EvernoteTagging {
         return noteUpdated;
     }
 
-    private boolean setTitleForPaperDocuments(String source, String title, String year, NoteMetadata nm, Note note) {
+    private boolean setTitleForPaperDocuments(NoteMetadata nm, Note note) {
+
+        String source = "mobile.iphone";
+        String title = "Foto";
+        int year = LocalDate.now().getYear();
+
+
         boolean noteUpdated = false;
-        System.out.println("attributes:" + nm.getAttributes());
-        System.out.println(source + ":source:" + (nm.getAttributes() == null ? "null" : nm.getAttributes().getSource()));
-        System.out.println(title + ":title:" + nm.getTitle());
+        //System.out.println("attributes:" + nm.getAttributes());
+        //System.out.println(source + ":source:" + (nm.getAttributes() == null ? "null" : nm.getAttributes().getSource()));
+        //System.out.println(title + ":title:" + nm.getTitle());
         if (
                 nm.getAttributes() != null &&
                 (nm.getAttributes().getSource() == null || source.equals(nm.getAttributes().getSource())) &&
@@ -258,7 +279,10 @@ public class EvernoteTagging {
                                 String text = om.readTree(json).path("text").asText();
                                 text = text.replaceAll("\\s+", "");
                                 text = text.replace(',', '.');
-                                if (text.startsWith(year + ".")) {
+                                if (
+                                        text.startsWith(year + ".") ||
+                                        text.startsWith((year - 1) + ".")
+                                ) {
                                     while (text.endsWith(".")) {
                                         text = text.substring(0, text.length() - 1);
                                     }

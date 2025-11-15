@@ -20,6 +20,8 @@ public class LocalStore {
 
     private final Path images_tmp;
 
+    private final Path mappings;
+
     private static final LocalStore singleton;
 
     static {
@@ -49,6 +51,8 @@ public class LocalStore {
         internet_single_oauth = create(internet_single.toString(), "oauth");
 
         images_tmp = create(base.toString(), "images-tmp");
+
+        mappings = create(base.toString(), "mappings");
     }
 
     private Path create(String b, String s) throws IOException {
@@ -81,4 +85,6 @@ public class LocalStore {
     }
 
     public Path getImages_tmp() { return images_tmp; }
+
+    public Path getMappings() { return mappings; }
 }

@@ -5,17 +5,11 @@ import com.evernote.clients.ClientFactory;
 import com.evernote.clients.NoteStoreClient;
 import com.evernote.edam.error.EDAMSystemException;
 import com.evernote.edam.error.EDAMUserException;
-import com.evernote.edam.type.Tag;
 import com.evernote.thrift.TException;
-import com.example.evernote.EMailToTags;
-
-import java.util.List;
 
 public class RemoteNoteStore {
 
     private NoteStoreClient noteStore;
-
-    private List<Tag> tags;
 
     private static final RemoteNoteStore singleton;
 
@@ -37,11 +31,6 @@ public class RemoteNoteStore {
         EvernoteAuth userAuth = new EvernoteAuth(com.evernote.auth.EvernoteService.PRODUCTION, LocalTokenStore.getSingleton().load());
         ClientFactory factory = new ClientFactory(userAuth);
         noteStore = factory.createNoteStoreClient();
-        tags = noteStore.listTags();
-    }
-
-    public List<Tag> getTags() {
-        return tags;
     }
 
     public NoteStoreClient getNoteStore() {
