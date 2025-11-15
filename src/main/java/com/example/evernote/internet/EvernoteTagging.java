@@ -29,7 +29,10 @@ public class EvernoteTagging {
 
     private InternetHelper internetHelper;
 
-    private EvernoteTagging() throws Exception {
+    private boolean reTag = false;
+
+    private EvernoteTagging(boolean reTag) throws Exception {
+        this.reTag = reTag;
         internetHelper = new InternetHelper();
         inferenceClientAll = new InferenceClient("v7_c40");
         inferenceClient4 = new InferenceClient("v8_c40_2020");
@@ -38,7 +41,8 @@ public class EvernoteTagging {
 
     public static void main(String[] args) {
         try {
-            EvernoteTagging et = new EvernoteTagging();
+            boolean reTag = args != null && args.length == 1 && args[0].equals("retag=true");
+            EvernoteTagging et = new EvernoteTagging(reTag);
             et.tagNotes();
         } catch (Exception e) {
             e.printStackTrace(System.out);
@@ -82,30 +86,34 @@ public class EvernoteTagging {
             List<NoteMetadata> l = meta.getNotes();
             for (NoteMetadata nm : l) {
                 try {
-                    System.out.println("attributes:" + nm.getAttributes().getAuthor() + " " + nm.getAttributes().toString());
-                    sb.append(nm.getTitle());
+                    if (reTag || ! LocalNoteStore.getSingleton().isTagged(nm.getGuid())) {
+                        LocalNoteStore.getSingleton().unTag(nm.getGuid());
+                        System.out.println("attributes:" + nm.getAttributes().getAuthor() + " " + nm.getAttributes().toString());
+                        sb.append(nm.getTitle());
 
-                    Note note = LocalNoteStore.getSingleton().load(nm.getGuid(), nm.getUpdateSequenceNum());
-                    if (note == null) {
-                        note = RemoteNoteStore.getSingleton().getNoteStore().getNote(nm.getGuid(), true, true, true, true);
-                        LocalNoteStore.getSingleton().save(note);
-                        System.out.println("note from internet:" + note.getTitle());
-                    } else {
-                        System.out.println("note from store:" + note.getTitle());
-                    }
+                        Note note = LocalNoteStore.getSingleton().load(nm.getGuid(), nm.getUpdateSequenceNum());
+                        if (note == null) {
+                            note = RemoteNoteStore.getSingleton().getNoteStore().getNote(nm.getGuid(), true, true, true, true);
+                            LocalNoteStore.getSingleton().save(note);
+                            System.out.println("note from internet:" + note.getTitle());
+                        } else {
+                            System.out.println("note from store:" + note.getTitle());
+                        }
 
-                    // tagging from machine learning
-                    boolean tagsFromPredictionsUpdated = setTagsFromPredictions (note);
+                        // tagging from machine learning
+                        boolean tagsFromPredictionsUpdated = setTagsFromPredictions(note);
 
-                    // title for paper documents
-                    boolean titleUpdated = setTitleForPaperDocuments(source, title, year, nm, note);
+                        // title for paper documents
+                        boolean titleUpdated = setTitleForPaperDocuments(source, title, year, nm, note);
 
-                    // E-Mails
-                    boolean tagsFromEMailsUpdated = setTagsFromEMails(nm, note);
+                        // E-Mails
+                        boolean tagsFromEMailsUpdated = setTagsFromEMails(nm, note);
 
-                    if (tagsFromPredictionsUpdated || titleUpdated || tagsFromEMailsUpdated) {
-                        System.out.println("update:" + note.getTitle());
-                        RemoteNoteStore.getSingleton().getNoteStore().updateNote(note);
+                        if (tagsFromPredictionsUpdated || titleUpdated || tagsFromEMailsUpdated) {
+                            System.out.println("update:" + note.getTitle());
+                            RemoteNoteStore.getSingleton().getNoteStore().updateNote(note);
+                        }
+                        LocalNoteStore.getSingleton().tag(nm.getGuid());
                     }
                 } catch (Exception e) {e.printStackTrace(System.out);}
                 sb.append("\n");

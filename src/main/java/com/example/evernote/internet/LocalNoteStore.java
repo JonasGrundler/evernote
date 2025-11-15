@@ -58,4 +58,22 @@ public class LocalNoteStore {
         return null;
     }
 
+    public boolean isTagged (String guid) {
+        Path p = Paths.get(LocalStore.getSingleton().getInternet_single_notes().toString(), "note_" + guid + ".done");
+        return p.toFile().exists();
+    }
+
+    public void tag (String guid) throws IOException {
+        Path p = Paths.get(LocalStore.getSingleton().getInternet_single_notes().toString(), "note_" + guid + ".done");
+        if (! p.toFile().exists()) {
+            p.toFile().createNewFile();
+        }
+    }
+
+    public void unTag (String guid) throws IOException {
+        Path p = Paths.get(LocalStore.getSingleton().getInternet_single_notes().toString(), "note_" + guid + ".done");
+        if (p.toFile().exists()) {
+            p.toFile().delete();
+        }
+    }
 }
