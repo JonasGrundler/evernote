@@ -100,14 +100,14 @@ public class EvernoteTagging {
                             System.out.println("note from store:" + note.getTitle());
                         }
 
-                        // tagging from machine learning
-                        boolean tagsFromPredictionsUpdated = setTagsFromPredictions(note);
-
                         // title for paper documents
                         boolean titleUpdated = setTitleForPaperDocuments(source, title, year, nm, note);
 
                         // E-Mails
                         boolean tagsFromEMailsUpdated = setTagsFromEMails(nm, note);
+
+                        // tagging from machine learning
+                        boolean tagsFromPredictionsUpdated = setTagsFromPredictions(note);
 
                         if (tagsFromPredictionsUpdated || titleUpdated || tagsFromEMailsUpdated) {
                             System.out.println("update:" + note.getTitle());
@@ -250,7 +250,8 @@ public class EvernoteTagging {
                             // this is used
                             try {
                                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                ImageIO.write(top, "jpg", baos);          // Format wählen
+                                ImageIO.write(top, "png", baos);          // Format wählen
+                                baos.flush();
                                 String json = TrOcrClient.getSingleton().ocr(baos.toByteArray());
                                 System.out.println("trocr:" + json);
                                 ObjectMapper om = new ObjectMapper();
